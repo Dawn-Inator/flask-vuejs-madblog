@@ -1,5 +1,5 @@
 from flask import jsonify
-from . import bp
+from app.api import bp
 
 
 @bp.route('/ping', methods=['GET'])

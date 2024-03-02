@@ -1,4 +1,5 @@
 alembic==1.13.1
+app==0.0.1
 asgiref==3.7.2
 black==23.11.0
 blinker==1.7.0
@@ -39,6 +40,3 @@ sqlparse==0.4.4
 typing_extensions==4.10.0
 tzdata==2023.3
 Werkzeug==3.0.1
-
-pip~=24.0
-app~=0.0.1
