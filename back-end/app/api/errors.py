@@ -4,19 +4,6 @@ from app import db
 from app.api import bp
 
 
-# 服务端404 错误表示服务器无法找到请求的资源
-@bp.app_errorhandler(404)
-def not_found_error(error):
-    return error_response(404)
-
-
-# 服务端500 错误表示服务器内部发生了错误
-@bp.app_errorhandler(500)
-def internal_error(error):
-    db.session.rollback()
-    return error_response(500)
-
-
 def error_response(status_code, message=None):
     payload = {'error': HTTP_STATUS_CODES.get(status_code, 'Unknown error')}
     if message:
@@ -27,5 +14,16 @@ def error_response(status_code, message=None):
 
 
 def bad_request(message):
-    # 最常用的错误 400：错误的请求
+    '''最常用的错误 400：错误的请求'''
     return error_response(400, message)
+
+
+@bp.app_errorhandler(404)
+def not_found_error(error):
+    return error_response(404)
+
+
+@bp.app_errorhandler(500)
+def internal_error(error):
+    db.session.rollback()
+    return error_response(500)

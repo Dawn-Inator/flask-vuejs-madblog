@@ -7,7 +7,7 @@ from config import Config
 
 # Flask-SQLAlchemy plugin
 db = SQLAlchemy()
-# Flask-Migrate plugin
+# # Flask-Migrate plugin
 migrate = Migrate()
 
 
@@ -17,7 +17,6 @@ def create_app(config_class=Config):
 
     # Enable CORS
     CORS(app)
-
     # Init Flask-SQLAlchemy
     db.init_app(app)
     # Init Flask-Migrate
@@ -31,4 +30,3 @@ def create_app(config_class=Config):
 
 
 from app import models
-from app.api import ping, users, tokens
