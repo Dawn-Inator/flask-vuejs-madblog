@@ -1,28 +1,28 @@
 <template>
   <div class="container">
-    <h1>Sign In</h1>
+    <h1>{{ $t('auth.login.sign-in') }}</h1>
     <div class="row">
       <div class="col-md-4">
         <form @submit.prevent="onSubmit">
           <div class="form-group" v-bind:class="{'u-has-error-v1': loginForm.usernameError}">
-            <label for="username">Username</label>
+            <label for="username">{{ $t('auth.login.username') }}</label>
             <input type="text" v-model="loginForm.username" class="form-control" id="username" placeholder="">
             <small class="form-control-feedback" v-show="loginForm.usernameError">{{ loginForm.usernameError }}</small>
           </div>
           <div class="form-group" v-bind:class="{'u-has-error-v1': loginForm.passwordError}">
-            <label for="password">Password</label>
+            <label for="password">{{ $t('auth.login.password') }}</label>
             <input type="password" v-model="loginForm.password" class="form-control" id="password" placeholder="">
             <small class="form-control-feedback" v-show="loginForm.passwordError">{{ loginForm.passwordError }}</small>
           </div>
-          <button type="submit" class="btn btn-primary">Sign In</button>
+          <button type="submit" class="btn btn-primary">{{ $t('auth.login.sign-in') }}</button>
         </form>
       </div>
     </div>
     <br>
-    <p>New User? <router-link to="/register">Click to Register!</router-link></p>
+    <p>{{ $t('auth.login.new-user') }} <router-link to="/register">{{ $t('auth.login.click-register') }}</router-link></p>
     <p>
-        Forgot Your Password?
-        <a href="#">Click to Reset It</a>
+        {{ $t('auth.login.forgot-pass') }}
+        <router-link v-bind:to="{ name: 'ResetPasswordRequest' }">{{ $t('auth.login.click-reset') }}</router-link>
     </p>
   </div>
 </template>

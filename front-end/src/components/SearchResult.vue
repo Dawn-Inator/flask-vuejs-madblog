@@ -1,7 +1,8 @@
 <template>
-  <div>
+  <div class="container">
+
     <!-- Modal: Edit Post -->
-    <div class="modal fade" id="editPostModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div data-backdrop="static" class="modal fade" id="editPostModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
           <div class="modal-header">
@@ -33,22 +34,18 @@
       </div>
     </div>
 
-    <!-- 用户的文章列表 -->
     <div class="card border-0 g-mb-15">
       <!-- Panel Header -->
       <div class="card-header d-flex align-items-center justify-content-between g-bg-gray-light-v5 border-0 g-mb-15">
         <h3 class="h6 mb-0">
-          <i class="icon-bubbles g-pos-rel g-top-1 g-mr-5"></i> Your Posts <small v-if="posts">(共 {{ posts._meta.total_items }} 篇, {{ posts._meta.total_pages }} 页)</small>
+          <i class="icon-bubbles g-pos-rel g-top-1 g-mr-5"></i> All Posts <small v-if="posts">(共 {{ posts._meta.total_items }} 篇, {{ posts._meta.total_pages }} 页)</small>
         </h3>
+        
         <div class="dropdown g-mb-10 g-mb-0--md">
           <span class="d-block g-color-primary--hover g-cursor-pointer g-mr-minus-5 g-pa-5" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             <i class="icon-options-vertical g-pos-rel g-top-1"></i>
           </span>
           <div class="dropdown-menu dropdown-menu-right rounded-0 g-mt-10">
-            <router-link v-bind:to="{ name: 'FollowingPostsResource' }" class="dropdown-item g-px-10">
-              <i class="icon-plus g-font-size-12 g-color-gray-dark-v5 g-mr-5"></i> Posts of following
-            </router-link>
-            <div class="dropdown-divider"></div>
             <router-link v-bind:to="{ path: $route.path, query: { page: 1, per_page: 1 }}" class="dropdown-item g-px-10">
               <i class="icon-plus g-font-size-12 g-color-gray-dark-v5 g-mr-5"></i> 每页 1 篇
             </router-link>
@@ -58,9 +55,13 @@
             <router-link v-bind:to="{ path: $route.path, query: { page: 1, per_page: 10 }}" class="dropdown-item g-px-10">
               <i class="icon-wallet g-font-size-12 g-color-gray-dark-v5 g-mr-5"></i> 每页 10 篇
             </router-link>
+            
+            <div class="dropdown-divider"></div>
+            
             <router-link v-bind:to="{ path: $route.path, query: { page: 1, per_page: 20 }}" class="dropdown-item g-px-10">
               <i class="icon-fire g-font-size-12 g-color-gray-dark-v5 g-mr-5"></i> 每页 20 篇
             </router-link>
+            
           </div>
         </div>
       </div>
@@ -69,18 +70,69 @@
       <!-- Panel Body -->
       <div v-if="posts" class="card-block g-pa-0" >
 
-        <post v-for="(post, index) in posts.items" v-bind:key="index"
-          v-bind:post="post"
-          v-on:edit-post="onEditPost(post)"
-          v-on:delete-post="onDeletePost(post)">
-        </post>
+        <div class="media g-brd-around g-brd-gray-light-v4 g-brd-left-1 g-pa-20 g-mb-20"
+          v-for="(post, index) in posts.items" v-bind:key="index">
+          <router-link v-bind:to="{ path: `/user/${post.author.id}` }" v-bind:title="post.author.name || post.author.username">
+            <span v-if="post.is_new" class="d-inline-block g-pos-rel">
+              <span class="u-badge-v2--xs u-badge--top-left g-bg-red g-mt-7 g-ml-7"></span>
+              <img class="d-flex g-brd-around g-brd-gray-light-v3 g-pa-2 g-width-40 g-height-40 rounded-circle rounded mCS_img_loaded g-mt-3 g-mr-15" v-bind:src="post.author.avatar" v-bind:alt="post.author.name || post.author.username">
+            </span>
+            <img v-else class="d-flex g-brd-around g-brd-gray-light-v3 g-pa-2 g-width-40 g-height-40 rounded-circle rounded mCS_img_loaded g-mt-3 g-mr-15" v-bind:src="post.author.avatar" v-bind:alt="post.author.name || post.author.username">
+          </router-link>
+          
+          <div class="media-body">
+            <div class="g-mb-15">
+              <h5 class="h5 g-color-gray-dark-v1 mb-0"><router-link v-bind:to="{ path: `/user/${post.author.id}` }" class="g-text-underline--none--hover">{{ post.author.name || post.author.username }}</router-link> <span class="h6">发布了文章<router-link v-bind:to="{ name: 'PostDetail', params: { id: post.id }, query: { q: $route.query.q, page: $route.query.page, per_page: $route.query.per_page } }" class="g-text-underline--none--hover">《<span v-html="post.title"></span>》</router-link></span></h5>
+              <span class="g-color-gray-dark-v4 g-font-size-12">{{ $moment(post.timestamp).format('YYYY年MM月DD日 HH:mm:ss') }}</span>
+            </div>
+
+            <!-- vue-markdown 开始解析markdown，它是子组件，通过 props 给它传值即可
+            v-highlight 是自定义指令，用 highlight.js 语法高亮 -->
+            <vue-markdown
+              :source="post.summary"
+              class="markdown-body g-mb-15"
+              v-highlight>
+            </vue-markdown>
+
+            <div class="d-flex justify-content-start">
+              <ul class="list-inline mb-0">
+                <li class="list-inline-item g-mr-20">
+                  <a class="g-color-gray-dark-v5 g-text-underline--none--hover" href="javascript:;">
+                    <i class="icon-eye g-pos-rel g-top-1 g-mr-3"></i> {{ post.views }}
+                  </a>
+                </li>
+                <li class="list-inline-item g-mr-20">
+                  <router-link v-bind:to="{ path: `/post/${post.id}#like-post` }" class="g-color-gray-dark-v5 g-text-underline--none--hover">
+                    <i class="icon-heart g-pos-rel g-top-1 g-mr-3"></i> {{ post.likers_count }}
+                  </router-link>
+                </li>
+                <li class="list-inline-item g-mr-20">
+                  <router-link v-bind:to="{ path: `/post/${post.id}#comment-list-wrap` }" class="g-color-gray-dark-v5 g-text-underline--none--hover">
+                    <i class="icon-bubble g-pos-rel g-top-1 g-mr-3"></i> {{ post.comments_count }}
+                  </router-link>
+                </li>
+              </ul>
+              <ul class="list-inline mb-0 ml-auto">
+                <li class="list-inline-item g-mr-5">
+                  <router-link v-bind:to="{ name: 'PostDetail', params: { id: post.id }, query: { q: $route.query.q, page: $route.query.page, per_page: $route.query.per_page } }" class="btn btn-xs u-btn-outline-primary">阅读全文</router-link>
+                </li>
+                <li v-if="post.author.id == sharedState.user_id || sharedState.user_perms.includes('admin')" class="list-inline-item g-mr-5">
+                  <button v-on:click="onEditPost(post)" class="btn btn-xs u-btn-outline-purple" data-toggle="modal" data-target="#editPostModal">编辑</button>
+                </li>
+                <li v-if="post.author.id == sharedState.user_id || sharedState.user_perms.includes('admin')" class="list-inline-item">
+                  <button v-on:click="onDeletePost(post)" class="btn btn-xs u-btn-outline-red">删除</button>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
 
       </div>
       <!-- End Panel Body -->
     </div>
-  
+
     <!-- Pagination #04 -->
-    <div v-if="posts">
+    <div v-if="posts && posts._meta.total_pages > 1">
       <pagination
         v-bind:cur-page="posts._meta.page"
         v-bind:per-page="posts._meta.per_page"
@@ -88,30 +140,41 @@
       </pagination>
     </div>
     <!-- End Pagination #04 -->
+
   </div>
 </template>
 
 <script>
-import store from '../../store'
-import Post from '../Base/Post'
-import Pagination from '../Base/Pagination'
+import store from '../store'
+import Post from './Base/Post'
+import Pagination from './Base/Pagination'
+// 导入 vue-markdown 组件解析 markdown 原文为　HTML
+import VueMarkdown from 'vue-markdown'
 // bootstrap-markdown 编辑器依赖的 JS 文件，初始化编辑器在组件的 created() 方法中，同时它需要 JQuery 支持哦
-import '../../assets/bootstrap-markdown/js/bootstrap-markdown.js'
-import '../../assets/bootstrap-markdown/js/bootstrap-markdown.zh.js'
-import '../../assets/bootstrap-markdown/js/marked.js'
+import '../assets/bootstrap-markdown/js/bootstrap-markdown.js'
+import '../assets/bootstrap-markdown/js/bootstrap-markdown.zh.js'
+import '../assets/bootstrap-markdown/js/marked.js'
 
 
 export default {
-  name: 'PostsResource',  // this is the name of the component
+  name: 'SearchResult',  //this is the name of the component
   components: {
     Post,
-    Pagination
+    Pagination,
+    VueMarkdown
   },
   data () {
     return {
       sharedState: store.state,
-      user: '',
       posts: '',
+      postForm: {
+        title: '',
+        summary: '',
+        body: '',
+        errors: 0,  // 表单是否在前端验证通过，0 表示没有错误，验证通过
+        titleError: null,
+        bodyError: null
+      },
       editPostForm: {
         title: '',
         summary: '',
@@ -123,21 +186,12 @@ export default {
     }
   },
   methods: {
-    getUser (id) {
-      const path = `/api/users/${id}`
-      this.$axios.get(path)
-        .then((response) => {
-          // handle success
-          this.user = response.data
-        })
-        .catch((error) => {
-          // handle error
-          console.error(error)
-        })
-    },
-    getUserPosts (id) {
+    getSearchResult () {
+      let q = this.$route.query.q
       let page = 1
       let per_page = 5
+      let path
+
       if (typeof this.$route.query.page != 'undefined') {
         page = this.$route.query.page
       }
@@ -146,15 +200,27 @@ export default {
         per_page = this.$route.query.per_page
       }
       
-      const path = `/api/users/${id}/posts/?page=${page}&per_page=${per_page}`
+      if (typeof q != 'undefined') {
+        path = `/api/search/?q=${q}&page=${page}&per_page=${per_page}`
+      } else {
+        path = `/api/search/?page=${page}&per_page=${per_page}`
+      }
+
       this.$axios.get(path)
         .then((response) => {
           // handle success
-          this.posts = response.data
+          this.posts = response.data.data
+          if (response.data.data._meta.total_items > 0) {
+            this.$toasted.success(response.data.message, { icon: 'fingerprint' })
+          } else {
+            this.$toasted.error('Can not find any result.', { icon: 'fingerprint' })
+          }
         })
         .catch((error) => {
           // handle error
-          console.error(error)
+          console.log(error.response.data)
+          this.posts = ''
+          this.$toasted.error(error.response.data.message, { icon: 'fingerprint' })
         })
     },
     onEditPost (post) {
@@ -183,7 +249,7 @@ export default {
         this.editPostForm.errors++
         this.editPostForm.bodyError = 'Body is required.'
         // boostrap4 modal依赖jQuery，不兼容 vue.js 的双向绑定。所以要手动添加警示样式和错误提示
-        // 给 bootstrap-markdown 编辑器内容添加警示样式，而不是添加到 #post_body 上
+        // 给 bootstrap-markdown 编辑器内容添加警示样式，而不是添加到 #postFormBody 上
         $('#editPostForm .md-editor').closest('.form-group').addClass('u-has-error-v1')  // Bootstrap 4
         $('#editPostForm .md-editor').after('<small class="form-control-feedback">' + this.editPostForm.bodyError + '</small>')
       } else {
@@ -195,9 +261,6 @@ export default {
         return false
       }
 
-      // 先隐藏 Modal
-      $('#editPostModal').modal('hide')
-
       const path = `/api/posts/${this.editPostForm.id}`
       const payload = {
         title: this.editPostForm.title,
@@ -206,8 +269,11 @@ export default {
       }
       this.$axios.put(path, payload)
         .then((response) => {
+          // 先隐藏 Modal
+          $('#editPostModal').modal('hide')
+
           // handle success
-          this.getUserPosts(this.sharedState.user_id)
+          this.getSearchResult()
           this.$toasted.success('Successed update the post.', { icon: 'fingerprint' })
           this.editPostForm.title = '',
           this.editPostForm.summary = '',
@@ -215,8 +281,22 @@ export default {
         })
         .catch((error) => {
           // handle error
-          console.log(error.response.data)
-          this.$toasted.error(error.response.data.message, { icon: 'fingerprint' })
+          for (var field in error.response.data.message) {
+            if (field == 'title') {
+              this.editPostForm.titleError = error.response.data.message[field]
+              // boostrap4 modal依赖jQuery，不兼容 vue.js 的双向绑定。所以要手动添加警示样式和错误提示
+              $('#editPostFormTitle').closest('.form-group').addClass('u-has-error-v1')  // Bootstrap 4
+              $('#editPostFormTitle').after('<small class="form-control-feedback">' + this.editPostForm.titleError + '</small>')
+            } else if (field == 'body') {
+              this.editPostForm.bodyError = error.response.data.message[field]
+              // boostrap4 modal依赖jQuery，不兼容 vue.js 的双向绑定。所以要手动添加警示样式和错误提示
+              // 给 bootstrap-markdown 编辑器内容添加警示样式，而不是添加到 #postFormBody 上
+              $('#editPostForm .md-editor').closest('.form-group').addClass('u-has-error-v1')  // Bootstrap 4
+              $('#editPostForm .md-editor').after('<small class="form-control-feedback">' + this.editPostForm.bodyError + '</small>')
+            } else {
+              this.$toasted.error(error.response.data.message[field], { icon: 'fingerprint' })
+            }
+          }
         })
     },
     onResetUpdatePost () {
@@ -225,7 +305,7 @@ export default {
       $('#editPostForm .form-group.u-has-error-v1').removeClass('u-has-error-v1')
       // 再隐藏 Modal
       $('#editPostModal').modal('hide')
-      // this.getUserPosts(this.sharedState.user_id)
+      // this.getSearchResult()
       this.$toasted.info('Cancelled, the post is not update.', { icon: 'fingerprint' })
     },
     onDeletePost (post) {
@@ -245,7 +325,8 @@ export default {
             .then((response) => {
               // handle success
               this.$swal('Deleted', 'You successfully deleted this post', 'success')
-              this.getUserPosts(this.sharedState.user_id)
+              // this.$toasted.success('Successed delete the post.', { icon: 'fingerprint' })
+              this.getSearchResult()
             })
             .catch((error) => {
               // handle error
@@ -259,12 +340,10 @@ export default {
     }
   },
   created () {
-    const user_id = this.sharedState.user_id
-    this.getUser(user_id)
-    this.getUserPosts(user_id)
+    this.getSearchResult()
     // 初始化 bootstrap-markdown 插件
     $(document).ready(function() {
-      $("#editPostFormBody").markdown({
+      $("#postFormBody, #editPostFormBody").markdown({
         autofocus:false,
         savable:false,
         iconlibrary: 'fa',  // 使用Font Awesome图标
@@ -272,20 +351,11 @@ export default {
       })
     })
   },
-  // 当路由变化后(比如变更查询参数 page 和 per_page)重新加载数据
+  // 当查询参数 page 或 per_page 变化后重新加载数据
   beforeRouteUpdate (to, from, next) {
+    // 注意：要先执行 next() 不然 this.$route.query 还是之前的
     next()
-    this.getUser(this.sharedState.user_id)
-    this.getUserPosts(this.sharedState.user_id)
-    // 初始化 bootstrap-markdown 插件
-    $(document).ready(function() {
-      $("#editPostFormBody").markdown({
-        autofocus:false,
-        savable:false,
-        iconlibrary: 'fa',  // 使用Font Awesome图标
-        language: 'zh'
-      })
-    })
+    this.getSearchResult()
   }
 }
 </script>

@@ -5,7 +5,12 @@ import store from './store'
 
 
 // 基础配置
-axios.defaults.baseURL = 'http://localhost:5000'
+if (process.env.NODE_ENV === 'production') {
+  axios.defaults.baseURL = 'https://www.madblog.ga:5000';
+} else {
+  axios.defaults.baseURL = 'http://127.0.0.1:5000';
+}
+// axios.defaults.baseURL = 'http://127.0.0.1:5000'
 // axios.defaults.timeout = 5000  // 超时时间（毫秒）
 // axios.defaults.retry = 2  // 重试次数
 // axios.defaults.retryDelay = 100  // 重试之间的间隔时间（毫秒）
@@ -31,11 +36,9 @@ axios.interceptors.response.use(function (response) {
   return response
 }, function (error) {
   // Do something with response error
-  if (typeof error.response == 'undefined') {
-    Vue.toasted.error('无法连接Flask API，请联系管理员', { icon: 'fingerprint' })
-  } else {
+  if (error.response) {
     // 匹配不同的响应码
-    switch  (error.response.status) {
+    switch (error.response.status) {
       case 401:
         // 清除 Token 及 已认证 等状态
         store.logoutAction()
@@ -51,20 +54,31 @@ axios.interceptors.response.use(function (response) {
 
       case 403:
         Vue.toasted.error('403: Forbidden', { icon: 'fingerprint' })
-        router.back()
+        // router.back()
         break
 
       case 404:
         Vue.toasted.error('404: Not Found', { icon: 'fingerprint' })
         router.back()
         break
-      
+
+      case 405:
+        Vue.toasted.error('405: Method Not Allowed', { icon: 'fingerprint' })
+        router.back()
+        break
+
       case 500:  // 根本拿不到 500 错误，因为 CORs 不会过来
         Vue.toasted.error('500: Oops... INTERNAL SERVER ERROR', { icon: 'fingerprint' })
         router.back()
         break
     }
+  } else if (error.request) {
+    console.log(error.request)
+    Vue.toasted.error('The request has not been sent to Flask API，because OPTIONS get error', { icon: 'fingerprint' })
+  } else {
+    console.log('Error: ', error.message)
   }
+  console.log(error.config)
 
   return Promise.reject(error)
 })

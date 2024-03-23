@@ -1,0 +1,17 @@
+{
+    "hi": "Hi",
+    "oops": "Oops..",
+    "ok": "OK",
+    "hello": "Hello, {name}!",
+    "auth": {
+        "login": {
+            "username": "Username",
+            "password": "Password",
+            "sign-in": "Sign In",
+            "new-user": "New User?",
+            "click-register": "Click to Register!",
+            "forgot-pass": "Forgot Your Password?",
+            "click-reset": "Click to Reset It"
+        }
+    }
+}

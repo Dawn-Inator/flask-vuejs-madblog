@@ -1,17 +1,17 @@
 <template>
-  <div v-bind:class="leftBrdColor" class="media g-brd-around g-brd-gray-light-v4 g-brd-left-1 g-pa-20 g-mb-20">
+  <div class="media g-brd-around g-brd-gray-light-v4 g-brd-left-1 g-pa-20 g-mb-20">
     <router-link v-bind:to="{ path: `/user/${post.author.id}` }" v-bind:title="post.author.name || post.author.username">
-      <img class="d-flex g-width-50 g-height-50 g-mt-3 g-mr-20" v-bind:src="post.author.avatar" v-bind:alt="post.author.name || post.author.username">
+      <span v-if="post.is_new" class="d-inline-block g-pos-rel">
+        <span class="u-badge-v2--xs u-badge--top-left g-bg-red g-mt-7 g-ml-7"></span>
+        <img class="d-flex g-brd-around g-brd-gray-light-v3 g-pa-2 g-width-40 g-height-40 rounded-circle rounded mCS_img_loaded g-mt-3 g-mr-15" v-bind:src="post.author.avatar" v-bind:alt="post.author.name || post.author.username">
+      </span>
+      <img v-else class="d-flex g-brd-around g-brd-gray-light-v3 g-pa-2 g-width-40 g-height-40 rounded-circle rounded mCS_img_loaded g-mt-3 g-mr-15" v-bind:src="post.author.avatar" v-bind:alt="post.author.name || post.author.username">
     </router-link>
     
     <div class="media-body">
-      <div class="d-sm-flex justify-content-sm-between align-items-sm-center g-mb-15 g-mb-10--sm">
-        <h5 class="h4 g-font-weight-300 g-mr-10 g-mb-5 g-mb-0--sm">
-          <router-link v-bind:to="{ name: 'PostDetail', params: { id: post.id } }" class="g-text-underline--none--hover">{{ post.title }}</router-link>
-        </h5>
-        <div class="text-nowrap g-font-size-12">
-          <span>{{ $moment(post.timestamp).fromNow() }}</span> / <router-link v-bind:to="{ path: `/user/${post.author.id}` }"><span v-if="post.author.name">{{ post.author.name }}</span><span v-else>{{ post.author.username }}</span></router-link>
-        </div>
+      <div class="g-mb-15">
+        <h5 class="h5 g-color-gray-dark-v1 mb-0"><router-link v-bind:to="{ path: `/user/${post.author.id}` }" class="g-text-underline--none--hover">{{ post.author.name || post.author.username }}</router-link> <span class="h6">发布了文章<router-link v-bind:to="{ name: 'PostDetail', params: { id: post.id } }" class="g-text-underline--none--hover">《<span v-html="post.title"></span>》</router-link></span></h5>
+        <span class="g-color-gray-dark-v4 g-font-size-12">{{ $moment(post.timestamp).format('YYYY年MM月DD日 HH:mm:ss') }}</span>
       </div>
 
       <!-- vue-markdown 开始解析markdown，它是子组件，通过 props 给它传值即可
@@ -30,6 +30,11 @@
             </a>
           </li>
           <li class="list-inline-item g-mr-20">
+            <router-link v-bind:to="{ path: `/post/${post.id}#like-post` }" class="g-color-gray-dark-v5 g-text-underline--none--hover">
+              <i class="icon-heart g-pos-rel g-top-1 g-mr-3"></i> {{ post.likers_count }}
+            </router-link>
+          </li>
+          <li class="list-inline-item g-mr-20">
             <router-link v-bind:to="{ path: `/post/${post.id}#comment-list-wrap` }" class="g-color-gray-dark-v5 g-text-underline--none--hover">
               <i class="icon-bubble g-pos-rel g-top-1 g-mr-3"></i> {{ post.comments_count }}
             </router-link>
@@ -39,10 +44,10 @@
           <li class="list-inline-item g-mr-5">
             <router-link v-bind:to="{ name: 'PostDetail', params: { id: post.id } }" class="btn btn-xs u-btn-outline-primary">阅读全文</router-link>
           </li>
-          <li v-if="post.author.id == sharedState.user_id" class="list-inline-item g-mr-5">
+          <li v-if="post.author.id == sharedState.user_id || sharedState.user_perms.includes('admin')" class="list-inline-item g-mr-5">
             <button v-on:click="$emit('edit-post')" class="btn btn-xs u-btn-outline-purple" data-toggle="modal" data-target="#editPostModal">编辑</button>
           </li>
-          <li v-if="post.author.id == sharedState.user_id" class="list-inline-item">
+          <li v-if="post.author.id == sharedState.user_id || sharedState.user_perms.includes('admin')" class="list-inline-item">
             <button v-on:click="$emit('delete-post')" class="btn btn-xs u-btn-outline-red">删除</button>
           </li>
         </ul>
@@ -66,6 +71,7 @@ export default {
       sharedState: store.state
     }
   },
+  /*
   computed: {
     leftBrdColor: function () {
       const colors = ['primary', 'blue', 'red', 'purple', 'orange', 'yellow', 'aqua', 'cyan', 'teal', 'brown', 'pink', 'black']
@@ -73,5 +79,6 @@ export default {
       return 'g-brd-' + colors[index] + '-left'
     }
   }
+  */
 }
 </script>

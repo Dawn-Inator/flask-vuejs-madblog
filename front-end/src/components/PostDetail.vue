@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <!-- Modal: Edit Post -->
-    <div class="modal fade" id="editPostModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div data-backdrop="static" class="modal fade" id="editPostModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
           <div class="modal-header">
@@ -35,7 +35,7 @@
     <!-- End Modal: Edit Post -->
 
     <!-- Modal: Edit Comment -->
-    <div class="modal fade" id="editCommentModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div data-backdrop="static" class="modal fade" id="editCommentModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
           <div class="modal-header">
@@ -65,15 +65,15 @@
       <!-- Articles Content -->
       <div class="col-lg-9">
         
-        <article class="g-mb-30 g-pt-15 g-pb-15">
+        <article v-if="post" class="g-mb-30 g-pt-15 g-pb-15">
           <header class="g-mb-30">
-            <h1 class="g-color-primary g-mb-15">{{ post.title }}</h1>
+            <h1 class="g-color-primary g-mb-15" v-html="post.title"></h1>
 
             <ul class="list-inline d-sm-flex g-color-gray-dark-v4 mb-0">
-              <li v-if="post.author && post.author.id == sharedState.user_id" class="list-inline-item">
+              <li v-if="post.author && (post.author.id == sharedState.user_id || sharedState.user_perms.includes('admin'))" class="list-inline-item">
                 <button v-on:click="onEditPost(post)" class="btn btn-xs u-btn-outline-purple g-mr-5" data-toggle="modal" data-target="#editPostModal">编辑</button>
               </li>
-              <li v-if="post.author && post.author.id == sharedState.user_id" class="list-inline-item">
+              <li v-if="post.author && (post.author.id == sharedState.user_id || sharedState.user_perms.includes('admin'))" class="list-inline-item">
                 <button v-on:click="onDeletePost(post)" class="btn btn-xs u-btn-outline-red g-mr-5">删除</button>
               </li>
               <li class="list-inline-item">
@@ -115,6 +115,26 @@
               class="markdown-body">
             </vue-markdown>
             
+          </div>
+
+          <div id="like-post" class="row">
+            <div class="col-lg-3">
+              <button v-on:click="onLikeOrUnlikePost(post)" v-bind:class="btnOutlineColor" class="btn btn-block g-rounded-50 g-py-12 g-mb-10">
+                <i class="icon-heart g-pos-rel g-top-1 g-mr-5"></i> 喜欢<span v-if="post.likers_id && post.likers_id.length > 0"> | {{ post.likers_id.length }}</span>
+              </button>
+            </div>
+            <div class="col-lg-9">
+              <ul v-if="post.likers" class="list-inline mb-0">
+                <li class="list-inline-item"
+                  v-for="(liker, index) in post.likers" v-bind:key="index">
+                  <router-link
+                    v-bind:to="{ path: `/user/${liker.id}` }"
+                    v-bind:title="liker.name || liker.username">
+                    <img class="g-brd-around g-brd-gray-light-v3 g-pa-2 g-width-40 g-height-40 rounded-circle rounded mCS_img_loaded g-mt-3" v-bind:src="liker.avatar" v-bind:alt="liker.name || liker.username">
+                  </router-link>
+                </li>
+              </ul>
+            </div>
           </div>
 
         </article>
@@ -206,7 +226,7 @@
             <div v-for="(comment, index) in comments.items" v-bind:key="index">
               <div v-bind:id="'c' + comment.id" class="comment-item media g-brd-around g-brd-gray-light-v4 g-pa-30 g-mb-20">
                 <router-link v-bind:to="{ path: `/user/${comment.author.id}` }">  
-                  <img class="d-flex g-width-50 g-height-50 rounded-circle g-mt-3 g-mr-15" v-bind:src="comment.author.avatar" v-bind:alt="comment.author.name || comment.author.username">
+                  <img class="d-flex g-width-50 g-height-50 rounded-circle g-brd-around g-brd-gray-light-v4 g-pa-2 g-mt-3 g-mr-15" v-bind:src="comment.author.avatar" v-bind:alt="comment.author.name || comment.author.username">
                 </router-link>
                 <div class="media-body">
                   <div class="g-mb-15">
@@ -228,7 +248,7 @@
 
                   <ul class="list-inline d-sm-flex my-0">
                     <li v-if="!comment.disabled" class="list-inline-item g-mr-20">
-                      <a v-on:click="onLikeOrUnlike(comment)" class="u-link-v5 g-color-gray-dark-v4 g-color-primary--hover" href="javascript:;">
+                      <a v-on:click="onLikeOrUnlikeComment(comment)" class="u-link-v5 g-color-gray-dark-v4 g-color-primary--hover" href="javascript:;">
                         <i v-bind:class="{ 'g-color-red': comment.likers_id.indexOf(sharedState.user_id) != -1 }" class="icon-like g-pos-rel g-top-1 g-mr-3"></i>
                         <span v-if="comment.likers_id.length > 0"> {{ comment.likers_id.length }} 人赞</span>
                         <span v-else>赞</span>
@@ -244,13 +264,13 @@
                       <li style="display: none;" class="list-inline-item g-mr-5">
                         <button v-on:click="onEditComment(comment)" class="btn btn-xs u-btn-outline-purple" data-toggle="modal" data-target="#editCommentModal">编辑</button>
                       </li>
-                      <li v-if="!comment.disabled && post.author.id == sharedState.user_id" class="list-inline-item">
+                      <li v-if="!comment.disabled && (post.author.id == sharedState.user_id || sharedState.user_perms.includes('admin'))" class="list-inline-item">
                         <button v-on:click="onDisabledComment(comment)" class="btn btn-xs u-btn-outline-purple">屏蔽</button>
                       </li>
-                      <li v-if="comment.disabled && post.author.id == sharedState.user_id" class="list-inline-item">
+                      <li v-if="comment.disabled && (post.author.id == sharedState.user_id || sharedState.user_perms.includes('admin'))" class="list-inline-item">
                         <button v-on:click="onEnabledComment(comment)" class="btn btn-xs u-btn-outline-aqua">恢复</button>
                       </li>
-                      <li v-if="comment.author.id == sharedState.user_id || post.author.id == sharedState.user_id" class="list-inline-item">
+                      <li v-if="comment.author.id == sharedState.user_id || post.author.id == sharedState.user_id || sharedState.user_perms.includes('admin')" class="list-inline-item">
                         <button v-on:click="onDeleteComment(comment)" class="btn btn-xs u-btn-outline-red">删除</button>
                       </li>
                     </ul>
@@ -264,7 +284,7 @@
                   v-for="(child, cindex) in comment.descendants" v-bind:key="cindex"
                   v-bind:id="'c' + child.id">
                 <router-link v-bind:to="{ path: `/user/${child.author.id}` }">  
-                  <img class="d-flex g-width-50 g-height-50 rounded-circle g-mt-3 g-mr-15" v-bind:src="child.author.avatar" v-bind:alt="child.author.name || child.author.username">
+                  <img class="d-flex g-width-50 g-height-50 rounded-circle g-brd-around g-brd-gray-light-v4 g-pa-2 g-mt-3 g-mr-15" v-bind:src="child.author.avatar" v-bind:alt="child.author.name || child.author.username">
                 </router-link>
                 <div class="media-body">
                   <div class="g-mb-15">
@@ -286,7 +306,7 @@
 
                   <ul class="list-inline d-sm-flex my-0">
                     <li v-if="!child.disabled" class="list-inline-item g-mr-20">
-                      <a v-on:click="onLikeOrUnlike(child)" class="u-link-v5 g-color-gray-dark-v4 g-color-primary--hover" href="javascript:;">
+                      <a v-on:click="onLikeOrUnlikeComment(child)" class="u-link-v5 g-color-gray-dark-v4 g-color-primary--hover" href="javascript:;">
                         <i v-bind:class="{ 'g-color-red': child.likers_id.indexOf(sharedState.user_id) != -1 }" class="icon-like g-pos-rel g-top-1 g-mr-3"></i>
                         <span v-if="child.likers_id.length > 0"> {{ child.likers_id.length }} 人赞</span>
                         <span v-else>赞</span>
@@ -302,13 +322,13 @@
                       <li style="display: none;" class="list-inline-item g-mr-5">
                         <button v-on:click="onEditComment(child)" class="btn btn-xs u-btn-outline-purple" data-toggle="modal" data-target="#editCommentModal">编辑</button>
                       </li>
-                      <li v-if="!child.disabled && post.author.id == sharedState.user_id" class="list-inline-item">
+                      <li v-if="!child.disabled && (post.author.id == sharedState.user_id || sharedState.user_perms.includes('admin'))" class="list-inline-item">
                         <button v-on:click="onDisabledComment(child)" class="btn btn-xs u-btn-outline-purple">屏蔽</button>
                       </li>
-                      <li v-if="child.disabled && post.author.id == sharedState.user_id" class="list-inline-item">
+                      <li v-if="child.disabled && (post.author.id == sharedState.user_id || sharedState.user_perms.includes('admin'))" class="list-inline-item">
                         <button v-on:click="onEnabledComment(child)" class="btn btn-xs u-btn-outline-aqua">恢复</button>
                       </li>
-                      <li v-if="child.author.id == sharedState.user_id || post.author.id == sharedState.user_id" class="list-inline-item">
+                      <li v-if="child.author.id == sharedState.user_id || post.author.id == sharedState.user_id || sharedState.user_perms.includes('admin')" class="list-inline-item">
                         <button v-on:click="onDeleteComment(child)" class="btn btn-xs u-btn-outline-red">删除</button>
                       </li>
                     </ul>
@@ -355,8 +375,7 @@
 import store from '../store'
 // 导入 vue-markdown 组件解析 markdown 原文为　HTML
 import VueMarkdown from 'vue-markdown'
-// 评论子组件和分页子组件
-import Comment from './Base/Comment'
+// 分页子组件
 import Pagination from './Base/Pagination'
 // vue-router 从 Home 页路由到 Post 页后，会重新渲染并且会移除事件，自定义的指令 v-highlight 也不生效了
 // 所以，这个页面，在 mounted() 和 updated() 方法中调用 highlightCode() 可以解决代码不高亮问题
@@ -375,7 +394,6 @@ export default {
   name: 'Post',
   components: {
     VueMarkdown,
-    Comment,
     Pagination
   },
   data() {
@@ -407,9 +425,40 @@ export default {
       }
     }
   },
+  computed: {
+    btnOutlineColor: function () {
+      if (this.sharedState.is_authenticated) {
+        if (this.post.likers_id && this.post.likers_id.indexOf(this.sharedState.user_id) != -1) {
+          return 'u-btn-outline-red'
+        } else {
+          return 'u-btn-outline-primary'
+        }
+      } else {
+        return 'u-btn-outline-primary'
+      }
+    }
+  },
   methods: {
     getPost (id) {
-      const path = `/api/posts/${id}`
+      let q = this.$route.query.q
+      let page = 1
+      let per_page = 5
+      let path
+
+      if (typeof this.$route.query.page != 'undefined') {
+        page = this.$route.query.page
+      }
+
+      if (typeof this.$route.query.per_page != 'undefined') {
+        per_page = this.$route.query.per_page
+      }
+      
+      if (typeof q != 'undefined') {
+        path = `/api/search/post-detail/${id}?q=${q}&page=${page}&per_page=${per_page}`
+      } else {
+        path = `/api/posts/${id}`
+      }
+
       this.$axios.get(path)
         .then((response) => {
           // handle success
@@ -458,9 +507,6 @@ export default {
         return false
       }
 
-      // 先隐藏 Modal
-      $('#editPostModal').modal('hide')
-
       const path = `/api/posts/${this.editPostForm.id}`
       const payload = {
         title: this.editPostForm.title,
@@ -469,6 +515,9 @@ export default {
       }
       this.$axios.put(path, payload)
         .then((response) => {
+          // 先隐藏 Modal
+          $('#editPostModal').modal('hide')
+
           // handle success
           this.getPost(this.editPostForm.id)
           this.$toasted.success('Successed update the post.', { icon: 'fingerprint' })
@@ -478,8 +527,22 @@ export default {
         })
         .catch((error) => {
           // handle error
-          console.log(error.response.data)
-          this.$toasted.error(error.response.data.message, { icon: 'fingerprint' })
+          for (var field in error.response.data.message) {
+            if (field == 'title') {
+              this.editPostForm.titleError = error.response.data.message[field]
+              // boostrap4 modal依赖jQuery，不兼容 vue.js 的双向绑定。所以要手动添加警示样式和错误提示
+              $('#editPostFormTitle').closest('.form-group').addClass('u-has-error-v1')  // Bootstrap 4
+              $('#editPostFormTitle').after('<small class="form-control-feedback">' + this.editPostForm.titleError + '</small>')
+            } else if (field == 'body') {
+              this.editPostForm.bodyError = error.response.data.message[field]
+              // boostrap4 modal依赖jQuery，不兼容 vue.js 的双向绑定。所以要手动添加警示样式和错误提示
+              // 给 bootstrap-markdown 编辑器内容添加警示样式，而不是添加到 #post_body 上
+              $('#editPostForm .md-editor').closest('.form-group').addClass('u-has-error-v1')  // Bootstrap 4
+              $('#editPostForm .md-editor').after('<small class="form-control-feedback">' + this.editPostForm.bodyError + '</small>')
+            } else {
+              this.$toasted.error(error.response.data.message[field], { icon: 'fingerprint' })
+            }
+          }
         })
     },
     onResetUpdatePost () {
@@ -525,6 +588,35 @@ export default {
         }
       })
     },
+    onLikeOrUnlikePost (post) {
+      // 用户需要先登录
+      if (!this.sharedState.is_authenticated) {
+        this.$toasted.error('您需要先登录才能收藏文章 ...', { icon: 'fingerprint' })
+        this.$router.replace({
+          path: '/login',
+          query: { redirect: this.$route.path + '#like-post' }
+        })
+      }
+
+      let path = ''
+      if (post.likers_id.indexOf(this.sharedState.user_id) != -1) {
+        // 当前登录用户已收藏过该文章，再次点击则取消收藏
+        path = `/api/posts/${post.id}/unlike`
+      } else {
+        path = `/api/posts/${post.id}/like`
+      }
+      this.$axios.get(path)
+        .then((response) => {
+          // handle success
+          this.getPost(this.$route.params.id)
+          this.$toasted.success(response.data.message, { icon: 'fingerprint' })
+        })
+        .catch((error) => {
+          // handle error
+          console.log(error.response.data)
+          this.$toasted.error(error.response.data.message, { icon: 'fingerprint' })
+        })
+    },
     getPostComments (id) {
       let page = 1
       let per_page = 10
@@ -550,7 +642,7 @@ export default {
           console.error(error)
         })
     },
-    onLikeOrUnlike (comment) {
+    onLikeOrUnlikeComment (comment) {
       // 用户需要先登录
       if (!this.sharedState.is_authenticated) {
         this.$toasted.error('您需要先登录才能点赞 ...', { icon: 'fingerprint' })
@@ -627,7 +719,7 @@ export default {
       let payload = ''
       if (this.commentForm.parent_id) {
         // 说明是回复评论
-        const at_who = `<a href="/user/${this.commentForm.author_id}" class="g-text-underline--none--hover">@${this.commentForm.author_name} </a>`
+        const at_who = `<a href="/#/user/${this.commentForm.author_id}" class="g-text-underline--none--hover">@${this.commentForm.author_name} </a>`
         payload = {
           body: at_who + this.commentForm.body,
           post_id: this.$route.params.id,

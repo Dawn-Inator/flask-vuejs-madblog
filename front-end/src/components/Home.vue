@@ -2,7 +2,7 @@
   <div class="container">
 
     <!-- Modal: Edit Post -->
-    <div class="modal fade" id="editPostModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div data-backdrop="static" class="modal fade" id="editPostModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
           <div class="modal-header">
@@ -34,7 +34,7 @@
       </div>
     </div>
 
-    <form id="addPostForm" v-if="sharedState.is_authenticated" @submit.prevent="onSubmitAddPost" class="g-mb-40">
+    <form id="addPostForm" v-if="sharedState.is_authenticated && sharedState.user_perms.includes('write')" @submit.prevent="onSubmitAddPost" class="g-mb-40">
       <div class="form-group" v-bind:class="{'u-has-error-v1': postForm.titleError}">
         <input type="text" v-model="postForm.title" class="form-control" id="postFormTitle" placeholder="标题">
         <small class="form-control-feedback" v-show="postForm.titleError">{{ postForm.titleError }}</small>
@@ -212,8 +212,15 @@ export default {
         })
         .catch((error) => {
           // handle error
-          console.log(error.response.data)
-          this.$toasted.error(error.response.data.message, { icon: 'fingerprint' })
+          for (var field in error.response.data.message) {
+            if (field == 'title') {
+              this.postForm.titleError = error.response.data.message[field]
+            } else if (field == 'body') {
+              this.postForm.bodyError = error.response.data.message[field]
+            } else {
+              this.$toasted.error(error.response.data.message[field], { icon: 'fingerprint' })
+            }
+          }
         })
     },
     onEditPost (post) {
@@ -254,9 +261,6 @@ export default {
         return false
       }
 
-      // 先隐藏 Modal
-      $('#editPostModal').modal('hide')
-
       const path = `/api/posts/${this.editPostForm.id}`
       const payload = {
         title: this.editPostForm.title,
@@ -265,6 +269,9 @@ export default {
       }
       this.$axios.put(path, payload)
         .then((response) => {
+          // 先隐藏 Modal
+          $('#editPostModal').modal('hide')
+
           // handle success
           this.getPosts()
           this.$toasted.success('Successed update the post.', { icon: 'fingerprint' })
@@ -274,8 +281,22 @@ export default {
         })
         .catch((error) => {
           // handle error
-          console.log(error.response.data)
-          this.$toasted.error(error.response.data.message, { icon: 'fingerprint' })
+          for (var field in error.response.data.message) {
+            if (field == 'title') {
+              this.editPostForm.titleError = error.response.data.message[field]
+              // boostrap4 modal依赖jQuery，不兼容 vue.js 的双向绑定。所以要手动添加警示样式和错误提示
+              $('#editPostFormTitle').closest('.form-group').addClass('u-has-error-v1')  // Bootstrap 4
+              $('#editPostFormTitle').after('<small class="form-control-feedback">' + this.editPostForm.titleError + '</small>')
+            } else if (field == 'body') {
+              this.editPostForm.bodyError = error.response.data.message[field]
+              // boostrap4 modal依赖jQuery，不兼容 vue.js 的双向绑定。所以要手动添加警示样式和错误提示
+              // 给 bootstrap-markdown 编辑器内容添加警示样式，而不是添加到 #postFormBody 上
+              $('#editPostForm .md-editor').closest('.form-group').addClass('u-has-error-v1')  // Bootstrap 4
+              $('#editPostForm .md-editor').after('<small class="form-control-feedback">' + this.editPostForm.bodyError + '</small>')
+            } else {
+              this.$toasted.error(error.response.data.message[field], { icon: 'fingerprint' })
+            }
+          }
         })
     },
     onResetUpdatePost () {

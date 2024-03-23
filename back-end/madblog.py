@@ -1,9 +1,10 @@
 import click
 import os
 import sys
+from flask_babel import gettext as _
 from app import create_app
 from app.extensions import db
-from app.models import User, Post, Comment
+from app.models import Role, User, Post, Comment, Notification, Message, Task
 from config import Config
 
 app = create_app(Config)
@@ -18,12 +19,20 @@ if os.environ.get('FLASK_COVERAGE'):
 
 @app.route('/')
 def hello_world():
-    return 'Hello, World!'
+    return _('Hello, World!')
 
 
 @app.shell_context_processor
 def make_shell_context():
-    return {'db': db, 'User': User, 'Post': Post, 'Comment': Comment}
+    return {'db': db, 'Role': Role, 'User': User, 'Post': Post, 'Comment': Comment,
+            'Notification': Notification, 'Message': Message, 'Task': Task}
+
+
+@app.cli.command()
+def deploy():
+    '''Run deployment tasks.'''
+    # 1. 创建角色
+    Role.insert_roles()
 
 
 @app.cli.command()

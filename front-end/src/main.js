@@ -23,16 +23,18 @@ import './assets/markdown-styles/github-markdown.css'
 // 自定义 css 文件
 import './assets/core.css'
 import './assets/custom.css'
+// vue-i18n 插件
+import i18n from './i18n'
 
 // register the vue-toasted plugin on vue
-import VueToasted  from 'vue-toasted'
+import VueToasted from 'vue-toasted'
 Vue.use(VueToasted, {
   // 主题样式 primary/outline/bubble
   theme: 'bubble',
   // 显示在页面哪个位置
   position: 'top-center',
   // 显示多久时间（毫秒）
-  duration: 3000,
+  duration: 10000,
   // 支持哪个图标集合
   iconPack : 'material', // set your iconPack, defaults to material. material|fontawesome|custom-class
   // 可以执行哪些动作
@@ -73,6 +75,7 @@ Vue.prototype.$moment = moment
 new Vue({
   el: '#app',
   router,
+  i18n,
   components: { App },
   template: '<App/>'
 })
