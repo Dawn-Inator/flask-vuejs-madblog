@@ -10,7 +10,7 @@ export default {
     // 后端传 URL 必须先用 base64 编码，所以这里还要多进行一次 atob 解码 base64 字符串
     user_avatar: window.localStorage.getItem('madblog-token') ? atob(JSON.parse(atob(window.localStorage.getItem('madblog-token').split('.')[1])).user_avatar) : '',
     // 用户登录后，就算刷新页面也能再次计算出 user_perms
-    user_perms: window.localStorage.getItem('madblog-token') ? atob(JSON.parse(atob(window.localStorage.getItem('madblog-token').split('.')[1])).permissions).split(",") : ''
+    user_perms: window.localStorage.getItem('madblog-token') ? JSON.parse(atob(window.localStorage.getItem('madblog-token').split('.')[1])).permissions.split(",") : ''
   },
   loginAction () {
     if (this.debug) { console.log('loginAction triggered') }
