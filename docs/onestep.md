@@ -6,7 +6,7 @@
 ```
 yum install -y git
 
-git clone https://github.com/Dawn-Inator/flask-vuejs-madblog.git -b docker
+git clone https://github.com/Dawn-Inator/flask-vuejs-madblog.git -b Docker
 ```
 
 - 编辑变量
