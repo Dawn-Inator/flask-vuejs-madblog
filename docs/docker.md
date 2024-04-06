@@ -515,6 +515,8 @@ curl -L "https://github.com/docker/compose/releases/download/1.24.0/docker-compo
 # 赋予Docker Compose执行权限
 chmod +x /usr/local/bin/docker-compose
 
+chmod +x back-end/boot.sh
+
 # 显示Docker和Docker Compose的版本，确认安装成功
 docker version
 docker-compose version
