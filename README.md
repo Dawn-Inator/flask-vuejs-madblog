@@ -64,6 +64,12 @@
 ![Bootstrap](https://img.shields.io/badge/Bootstrap-v4.1.3-orange)
 ![Webpack](https://img.shields.io/badge/webpack-v3.6.0-yellowgreen)
 
+|配置|需求|
+|---|---|
+|vCPU|2+|
+|内存|4GB+|
+|存储|10GB+|
+
 ## 📖服务器与节点选择
 
 <h3><a href="https://aws.amazon.com/" target="_blank"><b>Amazon Web Services</b></a></h3>
