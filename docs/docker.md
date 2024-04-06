@@ -126,6 +126,8 @@ systemctl enable docker
 ```
 
 ## DockerFile Create
+- 镜像配置我们一般放在/www/flask-vuejs-madblog/下
+- cd /home/www/flask-vuejs-madblog/
 
 ### ~~Elasticsearch Create(Deprecated Method)~~
 - **方法过于复杂，已弃用**
@@ -163,7 +165,6 @@ systemctl enable docker
 ### Elasticsearch Create(Recommended Method)
 - 推荐方法
 - 构建elasticsearch的镜像配置
-- /www/flask-vuejs-madblog/
 
 ```
 vim Dockerfile.elasticsearch
@@ -180,9 +181,8 @@ RUN elasticsearch-plugin install --batch https://github.com/medcl/elasticsearch-
 ### Flask-api Dockerfile
 - 配置gunicorn
 - "-"意味着让Gunicorn将访问日志和错误日志输出到标准输出流（stdout）和标准错误流（stderr）。这种配置在Docker容器环境中非常有用，因为它允许日志被容器化应用的默认日志收集机制捕获，而不是写入到文件中。这样，您可以通过docker logs命令或者Docker的日志驱动来收集和查看日志，方便在容器化部署中的日志管理和监控。
-- /www/flask-vuejs-madblog/back-end/
 ```
-vim gunicorn.conf.py
+vim back-end/gunicorn.conf.py
 ```
   
 ```
@@ -234,7 +234,7 @@ RUN pip install -r requirements.txt && pip install pymysql gunicorn pyopenssl
 
 ENV FLASK_APP madblog.py
 EXPOSE 5000
-ENTRYPOINT ["bash", "./boot.sh"]
+ENTRYPOINT ["bash", "./back-end/boot.sh"]
 ```
 
 - 构建后端 Flask API 镜像(可选)，已经整合到docker-compose.yaml里面了
