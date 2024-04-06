@@ -176,7 +176,7 @@ FROM docker.elastic.co/elasticsearch/elasticsearch:7.0.0
 RUN elasticsearch-plugin install --batch https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v7.0.0/elasticsearch-analysis-ik-7.0.0.zip
 ```
 
-- 后来的安装设置已经整合到docker-compose.yaml里面了
+- 后来的安装设置已经整合到docker-compose.yml里面了
 
 ### Flask-api Dockerfile
 - 配置gunicorn
@@ -237,7 +237,7 @@ EXPOSE 5000
 ENTRYPOINT ["bash", "./back-end/boot.sh"]
 ```
 
-- 构建后端 Flask API 镜像(可选)，已经整合到docker-compose.yaml里面了
+- 构建后端 Flask API 镜像(可选)，已经整合到docker-compose.yml里面了
 - -f 或 --file 参数指定了构建镜像时使用的 Dockerfile 文件的路径，在这个例子中，Dockerfile 位于 back-end 目录下
 - -t 或 --tag 参数用于给构建的镜像指定一个标签，格式通常是 `<name>:<tag>`
 - 使用 . 表示当前目录作为构建上下文发送给 Docker 守护进程
@@ -311,10 +311,10 @@ EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
 ```
 
-- 然后整合到了docker-compose.yaml里面了
+- 然后整合到了docker-compose.yml里面了
 
 ## Docker-Compose Startup
-*在单机上可以使用 Docker Compose 来编排我们多个容器，只需要提供一个 YAML 配置文件，一条命令就可以把这些容器全部启动起来，非常方便*
+*在单机上可以使用 Docker Compose 来编排我们多个容器，只需要提供一个 YML 配置文件，一条命令就可以把这些容器全部启动起来，非常方便*
 
 - Linux 安装 Docker-CE 时，默认没有安装 Compose 工具，需要我们额外安装
 ```
