@@ -94,7 +94,7 @@ cd /home/
 
 mkdir www&&cd www
 
-git clone https://github.com/Dawn-Inator/flask-vuejs-madblog.git -b linux
+git clone https://github.com/Dawn-Inator/flask-vuejs-madblog.git -b Linux
 ```
 
 ## Docker Install
