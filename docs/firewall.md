@@ -87,6 +87,8 @@ trusted-host=mirrors.aliyun.com
 ```
 sudo -i
 
+mkdir /root/.ssh/
+
 cp /home/azureuser/.ssh/authorized_keys /root/.ssh/
 ```
 
