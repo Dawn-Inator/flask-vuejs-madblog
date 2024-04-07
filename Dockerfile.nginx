@@ -13,6 +13,9 @@ RUN npm install && npm run build
 # 第二阶段：使用 Nginx 镜像
 FROM nginx:latest
 
+# 将从第一阶段构建的整个 app 目录（包括 dist）复制到 Nginx 镜像中的 /app 下
+COPY --from=builder /app /app
+
 # 将从第一阶段构建的静态文件复制到 Nginx 工作目录中
 COPY --from=builder /app/dist/ /usr/share/nginx/html/
 
