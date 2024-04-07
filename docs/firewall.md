@@ -27,13 +27,22 @@
 # 网络与防火墙配置
 
 ## FireWall configure
-- 开启端口进行ping测试
+- 开启端口
+- (以下必开)
+- npm登录端口为81
 - http端口是80
 - https端口是443
+- ···
+- (以下可选)
+- 5000是后端端口
+- 8080是前端端口
+- 这些都用npm代理域名，可以关闭
 ```
 firewall-cmd --zone=public --permanent --add-service=http
 
 firewall-cmd --zone=public --permanent --add-service=https
+
+firewall-cmd --zone=public --permanent --add-port=81/tcp
 
 firewall-cmd --zone=public --permanent --add-port=5000/tcp
 
