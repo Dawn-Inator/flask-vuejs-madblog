@@ -25,5 +25,7 @@ RUN cp -r /app/dist/* /usr/share/nginx/html/
 # 暴露端口
 EXPOSE 80
 
+ENTRYPOINT ["bash", "/app/boot.sh"]
+
 # 启动 Nginx
 CMD ["nginx", "-g", "daemon off;"]
