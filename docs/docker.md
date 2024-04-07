@@ -486,6 +486,16 @@ docker save mysql:8.0 redis:alpine my-elasticsearch-ik madblog-api:0.0.1 nginx -
 docker load -i madblog-docker.tar
 ```
 
+- 删除所有容器（包括运行中和停止的）
+```
+docker rm $(docker ps -aq)
+```
+
+- 删除所有 Docker 镜像
+```
+docker rmi $(docker images -q)
+```
+
 ## Bash in Onestep
 - 将cmd命令压缩成一个文件
 - 于/flask-vuejs-madblog/创建onestep.sh
