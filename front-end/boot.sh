@@ -2,4 +2,5 @@
 
 cp -r /app/dist/* /usr/share/nginx/html/
 
-exit 0
+# 启动 Nginx
+exec nginx -g 'daemon off;'
