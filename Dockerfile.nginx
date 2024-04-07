@@ -5,7 +5,7 @@ FROM node:10.15.3 as builder
 WORKDIR /app
 
 # 复制前端源代码到工作目录
-COPY front-end/ .
+COPY front-end/ /app/
 
 # 安装依赖并构建静态文件
 RUN npm install && npm run build
@@ -15,6 +15,9 @@ FROM nginx:latest
 
 # 将从第一阶段构建的静态文件复制到Nginx目录中
 COPY --from=builder /app/dist/ /usr/share/nginx/html/
+
+# 确保所有用户都有文件的读取权限
+RUN chmod -R 755 /usr/share/nginx/html/
 
 # （可选）复制Nginx配置文件
 # COPY docker/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf
