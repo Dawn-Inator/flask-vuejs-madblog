@@ -1,10 +1,5 @@
-# 使用 Node.js 镜像作为基础
-FROM node:10.15.3
-
-# 安装 Nginx
-RUN apt-get update && \
-    apt-get install -y nginx && \
-    rm -rf /var/lib/apt/lists/*
+# 第一阶段：使用 Node.js 镜像构建静态文件
+FROM node:10.15.3 AS builder
 
 # 设置工作目录
 WORKDIR /app
@@ -15,14 +10,16 @@ COPY ./front-end /app
 # 安装依赖并构建静态文件
 RUN npm install && npm run build
 
-# 将构建的静态文件复制到 Nginx 目录中
-RUN cp -r dist/* /usr/share/nginx/html/
+# 第二阶段：使用 Nginx 镜像
+FROM nginx:latest
+
+# 将从第一阶段构建的静态文件复制到 Nginx 目录中
+COPY --from=builder /app/dist/ /app/dist/
+
+COPY --from=builder /app/dist/ /usr/share/nginx/html/
 
 # （可选）复制 Nginx 配置文件
-# COPY docker/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf
-
-# 清理工作目录
-RUN rm -rf /app
+# COPY ./docker/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf
 
 # 暴露端口
 EXPOSE 80
