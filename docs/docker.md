@@ -295,7 +295,7 @@ FROM node:10.15.3 as builder
 WORKDIR /app
 
 # 复制前端源代码到工作目录
-COPY front-end/ /app/
+COPY ./front-end /app
 
 # 安装依赖并构建静态文件
 RUN npm install && npm run build
@@ -441,8 +441,8 @@ services:
       - '81:81'
       - '443:443'
     volumes:
-      - ./data:/data
-      - ./letsencrypt:/etc/letsencrypt
+      - ./docker/npm/data:/data
+      - ./docker/npm/letsencrypt:/etc/letsencrypt
       
 ```
 
@@ -484,6 +484,11 @@ docker save mysql:8.0 redis:alpine my-elasticsearch-ik madblog-api:0.0.1 nginx -
 - 容器加载
 ```
 docker load -i madblog-docker.tar
+```
+
+- 重新构建所有镜像
+```
+docker-compose build
 ```
 
 - 删除所有容器（包括运行中和停止的）
