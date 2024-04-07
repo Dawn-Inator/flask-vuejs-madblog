@@ -26,6 +26,7 @@ services:
     build:
       context: . 
       dockerfile: Dockerfile.elasticsearch
+    user: "1000:1000"
     environment:
       - "discovery.type=single-node"
       - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
