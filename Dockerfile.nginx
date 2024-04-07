@@ -5,7 +5,7 @@ FROM node:10.15.3 as builder
 WORKDIR /app
 
 # 复制前端源代码到工作目录
-COPY front-end/ /app/
+COPY ./front-end /app
 
 # 安装依赖并构建静态文件
 RUN npm install && npm run build
