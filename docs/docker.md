@@ -220,6 +220,8 @@ chmod +x back-end/boot.sh
 ```
 
 - 然后再新建一个 Dockerfile.app
+- WORKDIR设置容器内部的工作目录为/app，这不是linux主机的路径
+- COPY将linux主机路径./back-end复制到docker容器路径/app
 ```
 vim Dockerfile.app
 ```
@@ -227,14 +229,17 @@ vim Dockerfile.app
 ```
 FROM python:3.7.4
 
-COPY ./back-end ./docker/app
-WORKDIR ./docker/app
+WORKDIR /app
+
+COPY ./back-end /app
+
+RUN chmod +x /app/boot.sh
 
 RUN pip install -r requirements.txt && pip install pymysql gunicorn pyopenssl
 
 ENV FLASK_APP madblog.py
 EXPOSE 5000
-ENTRYPOINT ["bash", "./back-end/boot.sh"]
+ENTRYPOINT ["bash", "/app/boot.sh"]
 ```
 
 - 构建后端 Flask API 镜像(可选)，已经整合到docker-compose.yml里面了
@@ -300,6 +305,9 @@ FROM nginx:latest
 
 # 将从第一阶段构建的静态文件复制到Nginx目录中
 COPY --from=builder /app/dist/ /usr/share/nginx/html/
+
+# 确保所有用户都有文件的读取权限
+RUN chmod -R 755 /usr/share/nginx/html/
 
 # （可选）复制Nginx配置文件
 # COPY docker/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf
@@ -514,8 +522,6 @@ curl -L "https://github.com/docker/compose/releases/download/1.24.0/docker-compo
 
 # 赋予Docker Compose执行权限
 chmod +x /usr/local/bin/docker-compose
-
-chmod +x back-end/boot.sh
 
 # 显示Docker和Docker Compose的版本，确认安装成功
 docker version
