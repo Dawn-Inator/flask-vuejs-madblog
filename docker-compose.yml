@@ -38,7 +38,7 @@ services:
   madblog-api:
     build:
       context: .   
-      dockerfile: Dockerfile.app  
+      dockerfile: Dockerfile.api  
     image: madblog-api:0.0.1   # 指定构建完成的镜像名和标签
     environment:
       - REDIS_URL=redis://redis:6379/0
