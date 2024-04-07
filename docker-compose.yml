@@ -74,7 +74,7 @@ services:
     build:
       context: . 
       dockerfile: Dockerfile.nginx
-    image: nginx
+    image: nginx-vuejs
     ports:
       - "8080:80"
       - "8443:443"
