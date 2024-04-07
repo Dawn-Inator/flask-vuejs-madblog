@@ -16,15 +16,9 @@ FROM nginx:latest
 # 将从第一阶段构建的整个 app 目录（包括 dist）复制到 Nginx 镜像中的 /app 下
 COPY --from=builder /app /app
 
-RUN chmod +x /app/boot.sh
-
-ENTRYPOINT ["bash", "/app/boot.sh"]
-
-# （可选）复制 Nginx 配置文件
-# COPY ./docker/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf
-
 # 暴露端口
 EXPOSE 80
 
-# 启动 Nginx
-CMD ["nginx", "-g", "daemon off;"]
+RUN chmod +x /app/boot.sh
+
+ENTRYPOINT ["bash", "/app/boot.sh"]
