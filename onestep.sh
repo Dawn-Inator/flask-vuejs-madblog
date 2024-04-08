@@ -33,4 +33,8 @@ chmod +x back-end/boot.sh
 docker version
 docker-compose version
 
+# 确保elasticsearch数据目录权限
+mkdir -p ./docker/elasticsearch/data
+sudo chown -R 1000:1000 ./docker/elasticsearch/data
+
 docker-compose up -d
