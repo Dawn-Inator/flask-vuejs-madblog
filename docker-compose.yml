@@ -54,7 +54,6 @@ services:
       - DATABASE_URL=mysql+pymysql://testuser:Password_123456@mysql:3306/madblog
     ports:
       - "5000:5000"
-      - "465:465"
 
   rq-worker:
     image: madblog-api:0.0.1
