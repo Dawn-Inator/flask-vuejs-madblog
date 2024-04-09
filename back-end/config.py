@@ -12,6 +12,7 @@ class Config(object):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     # 日志输出到控制台还是日志文件中
     LOG_TO_STDOUT = os.environ.get('LOG_TO_STDOUT', 'false').lower() in ['true', 'on', '1']
+    
     # 邮件配置
     MAIL_SERVER = 'smtp.qq.com'
     MAIL_PORT = 465
@@ -19,8 +20,8 @@ class Config(object):
     MAIL_USERNAME='服务器的qq邮箱'
     MAIL_PASSWORD='qq邮箱的授权码'
     MAIL_SENDER='发送者的名字'
-
     ADMINS = ['admin_1@qq.com','admin_2@qq.com']  # 管理员的邮箱地址
+    
     # 分页设置
     POSTS_PER_PAGE = 10
     USERS_PER_PAGE = 10
