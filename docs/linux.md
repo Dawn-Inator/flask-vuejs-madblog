@@ -77,6 +77,32 @@
                                      
 ```
 
+<br>
+
+- 前后端原理
+```
+    前端主机                                          后端主机
+       ↓                                                 ↓
+  [front-end]               ---------(返回结果)----- [back-end]
+       |                    |                             ↑
+       |                    ↓                             |
+       --(告诉后端ip)--> [Chrome] --(根据ip请求或发送数据)---
+
+```
+- 由上图可知Chrome要同时处理front-end和back-end的数据流量，所以https加密的ssl证书需要分别部署front-end和back-end
+- 我们只是将前端主机和后端主机合二为一，但是用axios连接时依然要写全ip地址x.x.x.x:5000，让Chrome知道去哪里获取数据
+
+```
+       --------------------主机---------------------------
+       |                                                 |
+       ↓                                                 ↓
+  [front-end]               ---------(返回结果)----- [back-end]
+       |                    |                             ↑
+       |                    ↓                             |
+       --(告诉后端ip)--> [Chrome] --(根据ip请求或发送数据)---
+
+```
+
 <br><br>
 
 # 论坛应用本体配置
@@ -387,6 +413,8 @@ rm -r /usr/bin/pip3
 ln -s /usr/local/python-3.7/bin/python3.7 /usr/bin/python3
 
 ln -s /usr/local/python-3.7/bin/pip3.7 /usr/bin/pip3
+
+ln -s /usr/local/python-3.7/bin/pip3.7 /usr/bin/pip
 ```
 
 ## Gunicorn Install

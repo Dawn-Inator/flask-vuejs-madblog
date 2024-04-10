@@ -26,7 +26,7 @@
 
 ## 网站配置和SSL申请
 
-### [NPM and SSL Configure](#npm-and-ssl-configure-1)
+### [Nginx Proxy Manager and SSL Configure](#nginx-proxy-manager-and-ssl-configure-1)
 
 ## 防火墙配置与部署错误处理
 
@@ -83,6 +83,37 @@
 
 ```
 
+<br>
+
+- docker镜像原理
+- Dockerfile是镜像配置，镜像可生成1个或者多个容器
+```
+                             --------> 容器1
+                             |
+docker --(Dockerfile)--> docker镜像 
+                             |
+                             --------> 容器2
+
+```
+
+- 前后端一键启动思路(以后端api为例)
+```                           
+
+                 -------(bash启动命令)-----
+                 |                        |    
+                 |                        ↓
+docker --(Dockerfile.api)--> api镜像 --(CMD启动)--> api容器
+  |                             ↑
+  |                             |
+  --------(代码复制)-------------                
+
+```
+
+- 所以配置docker-compose.yml时
+- 对于MySQL，Redis等使用官方默认的镜像的，不需要Dockerfile配置
+- 对于Elasticsearch因为要自定义下载ik插件，需要Dockerfile配置
+- 对于前后端既要配置代码，又要自定义启动，需要Dockerfile和bash.sh共同完成
+
 <br><br>
 
 # Docker项目部署
@@ -95,6 +126,67 @@ cd /home/
 mkdir www&&cd www
 
 git clone https://github.com/Dawn-Inator/flask-vuejs-madblog.git -b Linux
+```
+
+## App Configure
+- 修改前端配置
+```
+vim front-end/src/http.js
+```
+
+```
+if (process.env.NODE_ENV === 'production') {
+  axios.defaults.baseURL = 'http://x.x.x.x:5000';
+} else {
+  axios.defaults.baseURL = 'http://127.0.0.1:5000';
+}
+```
+
+- 修改后端配置
+- 因为后端有时读不到docker的环境变量，所以我们直接写入后端
+```
+vim back-end/config.py
+```
+
+```
+import os
+from dotenv import load_dotenv
+
+basedir = os.path.abspath(os.path.dirname(__file__))
+load_dotenv(os.path.join(basedir, '.env'))
+
+
+class Config(object):
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
+        'sqlite:///' + os.path.join(basedir, 'app.db')
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    # 日志输出到控制台还是日志文件中
+    LOG_TO_STDOUT = os.environ.get('LOG_TO_STDOUT', 'false').lower() in ['true', 'on', '1']
+    
+    # 邮件配置
+    MAIL_SERVER = 'smtp.qq.com'
+    MAIL_PORT = 465
+    MAIL_USE_SSL = 1
+    MAIL_USERNAME='服务器的qq邮箱'
+    MAIL_PASSWORD='qq邮箱的授权码'
+    MAIL_SENDER='发送者的名字'
+    ADMINS = ['admin_1@qq.com','admin_2@qq.com']  # 管理员的邮箱地址
+    
+    # 分页设置
+    POSTS_PER_PAGE = 10
+    USERS_PER_PAGE = 10
+    COMMENTS_PER_PAGE = 10
+    MESSAGES_PER_PAGE = 10
+    TASKS_PER_PAGE = 10
+    # Redis 用于 RQ 任务队列
+    REDIS_URL = os.environ.get('REDIS_URL') or 'redis://'
+    # Elasticsearch 全文检索
+    ELASTICSEARCH_URL = os.environ.get('ELASTICSEARCH_URL') or '127.0.0.1:9200'
+    # Flask-Babel
+    BABEL_DEFAULT_LOCALE = 'en'
+    BABEL_DEFAULT_TIMEZONE = 'UTC'
+    LANGUAGES = ['zh', 'en']
 ```
 
 ## Docker Install
@@ -223,7 +315,7 @@ chmod +x back-end/boot.sh
 - WORKDIR设置容器内部的工作目录为/app，这不是linux主机的路径
 - COPY将linux主机路径./back-end复制到docker容器路径/app
 ```
-vim Dockerfile.app
+vim Dockerfile.api
 ```
 
 ```
@@ -238,7 +330,9 @@ RUN chmod +x /app/boot.sh
 RUN pip install -r requirements.txt && pip install pymysql gunicorn pyopenssl
 
 ENV FLASK_APP madblog.py
+
 EXPOSE 5000
+
 ENTRYPOINT ["bash", "/app/boot.sh"]
 ```
 
@@ -282,14 +376,29 @@ docker build -f Dockerfile.app -t madblog-api:0.0.1 .
 
 
 ### Nginx Dockerflie(Recommended Method)
+- 配置启动脚本
+```
+vim front-end/boot.sh
+```
+
+```
+#!/bin/bash
+
+# 复制静态文件
+cp -r /app/dist/* /usr/share/nginx/html/
+
+# 启动 Nginx
+exec nginx -g 'daemon off;'
+```
+
 - 配置镜像文件
 ```
 vim Dockerfile.nginx
 ```
 
 ```
-# 第一阶段：使用Node.js镜像构建静态文件
-FROM node:10.15.3 as builder
+# 第一阶段：使用 Node.js 镜像构建静态文件
+FROM node:10.15.3 AS builder
 
 # 设置工作目录
 WORKDIR /app
@@ -300,23 +409,18 @@ COPY ./front-end /app
 # 安装依赖并构建静态文件
 RUN npm install && npm run build
 
-# 第二阶段：使用Nginx镜像
+# 第二阶段：使用 Nginx 镜像
 FROM nginx:latest
 
-# 将从第一阶段构建的静态文件复制到Nginx目录中
-COPY --from=builder /app/dist/ /usr/share/nginx/html/
-
-# 确保所有用户都有文件的读取权限
-RUN chmod -R 755 /usr/share/nginx/html/
-
-# （可选）复制Nginx配置文件
-# COPY docker/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf
+# 将从第一阶段构建的整个 app 目录（包括 dist）复制到 Nginx 镜像中的 /app 下
+COPY --from=builder /app /app
 
 # 暴露端口
 EXPOSE 80
 
-# 启动Nginx
-CMD ["nginx", "-g", "daemon off;"]
+RUN chmod +x /app/boot.sh
+
+ENTRYPOINT ["bash", "/app/boot.sh"]
 ```
 
 - 然后整合到了docker-compose.yml里面了
@@ -378,6 +482,7 @@ services:
     build:
       context: . 
       dockerfile: Dockerfile.elasticsearch
+    user: "1000:1000"
     environment:
       - "discovery.type=single-node"
       - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
@@ -390,18 +495,11 @@ services:
   madblog-api:
     build:
       context: .   
-      dockerfile: Dockerfile.app  
+      dockerfile: Dockerfile.api  
     image: madblog-api:0.0.1   # 指定构建完成的镜像名和标签
     environment:
       - REDIS_URL=redis://redis:6379/0
       - ELASTICSEARCH_URL=elasticsearch:9200
-      - ADMINS='<管理者的邮箱1>,<管理者的邮箱2>'
-      - MAIL_SERVER='smtp.qq.com'
-      - MAIL_PORT=465
-      - MAIL_USE_SSL=1
-      - MAIL_USERNAME='<服务器的qq邮箱>'
-      - MAIL_PASSWORD='<qq邮箱的授权码>'
-      - MAIL_SENDER="<发送者的名字>"
       - DATABASE_URL=mysql+pymysql://testuser:Password_123456@mysql:3306/madblog
     ports:
       - "5000:5000"
@@ -412,13 +510,6 @@ services:
       - DATABASE_URL=mysql+pymysql://testuser:Password_123456@mysql/madblog
       - REDIS_URL=redis://redis:6379/0
       - ELASTICSEARCH_URL=elasticsearch:9200
-      - ADMINS='<管理者的邮箱1>,<管理者的邮箱2>'
-      - MAIL_SERVER='smtp.qq.com'
-      - MAIL_PORT=465
-      - MAIL_USE_SSL=1
-      - MAIL_USERNAME='<服务器的qq邮箱>'
-      - MAIL_PASSWORD='<qq邮箱的授权码>'
-      - MAIL_SENDER="<发送者的名字>"
     entrypoint: rq
     command: worker -u redis://redis:6379/0 madblog-tasks
 
@@ -426,7 +517,7 @@ services:
     build:
       context: . 
       dockerfile: Dockerfile.nginx
-    image: nginx
+    image: nginx-vuejs
     ports:
       - "8080:80"
       - "8443:443"
@@ -467,7 +558,7 @@ docker-compose logs madblog-api
 ```
 docker-compose stop
 
-docker-compose rm [container_name_or_id]
+docker-compose rm madblog-api
 ```
 
 - 操作容器内部
@@ -476,29 +567,11 @@ docker-compose rm [container_name_or_id]
 docker-compose exec nginx bash
 ```
 
-- 容器保存
-```
-docker save mysql:8.0 redis:alpine my-elasticsearch-ik madblog-api:0.0.1 nginx -o madblog-docker.tar
-```
-
-- 容器加载
-```
-docker load -i madblog-docker.tar
-```
-
-- 重新构建所有镜像
+- 如果你修改了配置或代码，可以重新构建镜像并运行容器
 ```
 docker-compose build
-```
 
-- 删除所有容器（包括运行中和停止的）
-```
-docker rm $(docker ps -aq)
-```
-
-- 删除所有 Docker 镜像
-```
-docker rmi $(docker images -q)
+docker-compose up -d
 ```
 
 ## Bash in Onestep
@@ -538,9 +611,15 @@ curl -L "https://github.com/docker/compose/releases/download/1.24.0/docker-compo
 # 赋予Docker Compose执行权限
 chmod +x /usr/local/bin/docker-compose
 
+chmod +x back-end/boot.sh
+
 # 显示Docker和Docker Compose的版本，确认安装成功
 docker version
 docker-compose version
+
+# 确保elasticsearch数据目录权限
+mkdir -p ./docker/elasticsearch/data
+sudo chown -R 1000:1000 ./docker/elasticsearch/data
 
 docker-compose up -d
 ```
@@ -549,8 +628,8 @@ docker-compose up -d
 
 # 网站配置和SSL申请
 
-## NPM and SSL Configure
-***Nginx Proxy Manager(NPM)可以代理应用并管理域名和网站流量，也可以一步申请SSL证书，使用的是Let's encryt的证书*** 
+## Nginx Proxy Manager and SSL Configure
+***Nginx Proxy Manager可以代理应用并管理域名和网站流量，也可以一步申请SSL证书，使用的是Let's encryt的证书*** 
 
 - 当docker容器跑起来后， 连接到81端口即可访问管理界面。访问：http://你的服务器IP:81
 - 第一次登录的默认管理员账户：

@@ -7,15 +7,18 @@
 yum install -y git
 
 git clone https://github.com/Dawn-Inator/flask-vuejs-madblog.git -b Docker
-```
 
-- 编辑变量
-- 将其中的中文改为你的配置
-- 如：MAIL_USERNAME='<服务器的qq邮箱>' --> MAIL_USERNAME='123456@qq.com'
-```
 cd flask-vuejs-madblog
+```
 
-vim docker-compose.yml
+- 编辑后端变量
+```
+vim back-end/config.py
+```
+
+- 修改后端网址
+```
+vim front-end/src/http.js
 ```
 
 - 启动
