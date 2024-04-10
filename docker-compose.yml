@@ -44,6 +44,13 @@ services:
     environment:
       - REDIS_URL=redis://redis:6379/0
       - ELASTICSEARCH_URL=elasticsearch:9200
+      - ADMINS='dawn.inator.lzl@gmail.com'
+      - MAIL_SERVER='smtp.gmail.com'
+      - MAIL_PORT=465
+      - MAIL_USE_SSL=1
+      - MAIL_USERNAME='dawn.inator.bot@gmail.com'
+      - MAIL_PASSWORD='kzfaebxscogkapzv'
+      - MAIL_SENDER="<dawn.inator.bot@gmail.com>"
       - DATABASE_URL=mysql+pymysql://testuser:Password_123456@mysql:3306/madblog
     ports:
       - "5000:5000"
@@ -54,13 +61,13 @@ services:
       - DATABASE_URL=mysql+pymysql://testuser:Password_123456@mysql/madblog
       - REDIS_URL=redis://redis:6379/0
       - ELASTICSEARCH_URL=elasticsearch:9200
-      - ADMINS='<管理者的邮箱1>,<管理者的邮箱2>'
-      - MAIL_SERVER='smtp.qq.com'
+      - ADMINS='dawn.inator.lzl@gmail.com'
+      - MAIL_SERVER='smtp.gmail.com'
       - MAIL_PORT=465
       - MAIL_USE_SSL=1
-      - MAIL_USERNAME='<服务器的qq邮箱>'
-      - MAIL_PASSWORD='<qq邮箱的授权码>'
-      - MAIL_SENDER="<发送者的名字>"
+      - MAIL_USERNAME='dawn.inator.bot@gmail.com'
+      - MAIL_PASSWORD='kzfaebxscogkapzv'
+      - MAIL_SENDER="<dawn.inator.bot@gmail.com>"
     entrypoint: rq
     command: worker -u redis://redis:6379/0 madblog-tasks
 
