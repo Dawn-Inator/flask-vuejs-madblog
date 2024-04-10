@@ -115,6 +115,10 @@ cp /home/azureuser/.ssh/authorized_keys /root/.ssh/
 3 Nginx安装了ssl证书，但是gunicorn并没有安装
 
 -> gunicorn也安装ssl证书
+
+4 前端应用和后端服务位于不同的域名下，导致浏览器报错。如www.forum.com和www.forum.org
+
+-> 应该保证前端后端都是用*.forum.com的网址
 ```
 
 - 更多CORS错误原理请参考[这里](https://blog.huli.tw/2021/02/19/cors-guide-1/)
