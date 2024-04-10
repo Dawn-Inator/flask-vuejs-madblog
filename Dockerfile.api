@@ -12,6 +12,4 @@ ENV FLASK_APP madblog.py
 
 EXPOSE 5000
 
-EXPOSE 465
-
 ENTRYPOINT ["bash", "/app/boot.sh"]
