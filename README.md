@@ -1,4 +1,3 @@
-![cover](./imgs/TheEarth.jpg)
 
 ---
 
